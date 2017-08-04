@@ -18,6 +18,8 @@ import kohoutek.warcraft.entitystuff.components.MotionComponent;
 import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.ScaleComponent;
+import kohoutek.warcraft.entitystuff.components.SelectableComponent;
+import kohoutek.warcraft.entitystuff.components.SolidComponent;
 import kohoutek.warcraft.entitystuff.components.SpeedComponent;
 import kohoutek.warcraft.entitystuff.components.UnitAnimationComponent;
 import kohoutek.warcraft.entitystuff.components.TargetPointComponent;
@@ -93,7 +95,7 @@ public class Footman extends Entity {
 		movement.insert(SE,  anim);	
 		
 		add(pos);
-		add(new BoundsComponent(0,0,96,96));
+		add(new BoundsComponent(24,24,48,48));
 		add(new RenderableComponent());
 		add(new HealthComponent(60, 60));
 		add(new SpeedComponent(32));
@@ -101,5 +103,6 @@ public class Footman extends Entity {
 		add(new TargetPointComponent(initialTargetPoint.x, initialTargetPoint.y));
 		add(new Animation8xComponent(movement));
 		add(new ScaleComponent(2 ,2));
+		add(new SelectableComponent());
 	}
 }

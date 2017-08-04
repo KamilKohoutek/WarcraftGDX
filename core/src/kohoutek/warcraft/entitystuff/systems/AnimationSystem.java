@@ -14,6 +14,10 @@ import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.UnitAnimationComponent;
 import kohoutek.warcraft.entitystuff.components.TargetPointComponent;
 
+/**
+ * This system ensures that entities with 8x animations are rendered with correct animations based on their orientation
+ * @author Kamil Kohoutek
+ */
 public class AnimationSystem extends IteratingSystem {
 	
 	private final ComponentMapper<Animation8xComponent> ac = ComponentMapper.getFor(Animation8xComponent.class);
@@ -34,7 +38,7 @@ public class AnimationSystem extends IteratingSystem {
 		final Animation8xComponent anim = ac.get(entity);
 		final BoundsComponent bounds = bc.get(entity);
 		
-		Vector2 center = bounds.getCenter(new Vector2());
+		final Vector2 center = bounds.getCenter(new Vector2());
 		center.add(pos);
 		int angle = (int)Math.toDegrees(Math.atan2(point.y - center.y, point.x - center.x ));
 	   	if (angle < 0) {
@@ -56,8 +60,7 @@ public class AnimationSystem extends IteratingSystem {
 	        index = 6;
 	    } else if (angle >= 300 && angle <= 330){
 	        index = 7;
-	    }
-	      
+	    }	      
 	    
 	    entity.add(new AnimationComponent(anim.anims.get(index)));
 	    entity.remove(Animation8xComponent.class);

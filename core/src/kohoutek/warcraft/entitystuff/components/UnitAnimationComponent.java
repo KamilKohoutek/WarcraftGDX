@@ -7,8 +7,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 
 public class UnitAnimationComponent implements Component {
-	
-	
 	public final Array<Animation<TextureRegion>> movement;
 	public final Array<Animation<TextureRegion>> attack;
 	public final Array<Animation<TextureRegion>> death;

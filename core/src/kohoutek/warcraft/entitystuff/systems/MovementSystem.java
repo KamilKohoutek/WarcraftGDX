@@ -13,9 +13,13 @@ import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.SpeedComponent;
 import kohoutek.warcraft.entitystuff.components.TargetPointComponent;
 
+/**
+ * This system manages movement of entities
+ * @author Kamil Kohoutek
+ */
 public class MovementSystem extends IteratingSystem {
 	
-	/* NEVER FORGET: Y+ je nahoru */
+	/* NEVER FORGET: +Y is UP */
 	
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
 	private final ComponentMapper<BoundsComponent> bc = ComponentMapper.getFor(BoundsComponent.class);
@@ -34,7 +38,7 @@ public class MovementSystem extends IteratingSystem {
 		final SpeedComponent speed = sc.get(entity);
 		final TargetPointComponent point = utpc.get(entity);
 		
-		Vector2 center = bounds.getCenter(new Vector2());
+		final Vector2 center = bounds.getCenter(new Vector2());
 		center.add(pos);
 
 		

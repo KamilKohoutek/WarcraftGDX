@@ -15,15 +15,20 @@ import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.ScaleComponent;
 
-public class RenderSystem extends IteratingSystem {
+/**
+ * System for drawing animations
+ * @author Kamil Kohoutek
+ */
+public class AnimationRenderSystem extends IteratingSystem {
 	
 	private final Batch batch;
 	private final ComponentMapper<AnimationComponent> ac = ComponentMapper.getFor(AnimationComponent.class);
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
+	private final ComponentMapper<ScaleComponent> sc = ComponentMapper.getFor(ScaleComponent.class);
 	
 	@SuppressWarnings("unchecked")
-	public RenderSystem(Batch batch) {
-		super(Family.all(RenderableComponent.class, AnimationComponent.class, PositionComponent.class).get());
+	public AnimationRenderSystem(Batch batch) {
+		super(Family.all(RenderableComponent.class, AnimationComponent.class, PositionComponent.class, ScaleComponent.class).get());
 		this.batch = batch;
 		
 	}
@@ -38,18 +43,11 @@ public class RenderSystem extends IteratingSystem {
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
 		final AnimationComponent anim = ac.get(entity);
-		final PositionComponent pos = pc.get(entity);
-		
-		TextureRegion frame = anim.animation.getKeyFrame(anim.stateTime);
-		
-		final ScaleComponent sc = entity.getComponent(ScaleComponent.class);
-		float scx = 1;
-		float scy = 1;
-		if(sc != null){
-			scx = sc.x;
-			scy = sc.y;
-		}	
-		batch.draw(frame, pos.x, pos.y, frame.getRegionWidth() * scx, frame.getRegionHeight() * scy);
+		final PositionComponent pos = pc.get(entity);		
+		final TextureRegion frame = anim.animation.getKeyFrame(anim.stateTime);		
+		final ScaleComponent scale = sc.get(entity);		
+
+		batch.draw(frame, pos.x, pos.y, frame.getRegionWidth() * scale.x, frame.getRegionHeight() * scale.y);
 		
 		anim.stateTime += deltaTime;	
 	}

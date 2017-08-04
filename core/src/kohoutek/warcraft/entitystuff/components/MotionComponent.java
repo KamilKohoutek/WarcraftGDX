@@ -3,7 +3,7 @@ package kohoutek.warcraft.entitystuff.components;
 import com.badlogic.ashley.core.Component;
 
 /**
- * Component that enables a unit to move
+ * Component that enables a entity to move
  * @author Kamil Kohoutek
  */
 
