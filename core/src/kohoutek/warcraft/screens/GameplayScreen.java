@@ -34,7 +34,7 @@ public class GameplayScreen implements Screen, InputProcessor {
 	
 	@Override
 	public void show() {					
-		map = am.get("C:/Users/Kamil/Documents/warcraft/warcraft/res/map1.tmx", TiledMap.class);
+		map = am.get("../core/assets/map1.tmx", TiledMap.class);
 		renderer = new OrthogonalTiledMapRenderer(map, 1);
 		cam = new OrthographicCamera();
 		em = new EntityManager(new Engine(), renderer.getBatch(), am);

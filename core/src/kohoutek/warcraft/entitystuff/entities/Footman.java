@@ -35,7 +35,7 @@ public class Footman extends Entity {
 		final Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>(8);
 		final Array<Animation<TextureRegion>> death = new Array<Animation<TextureRegion>>(8);
 				
-		final Texture sheet = am.get("C:/Users/Kamil/Documents/warcraft/warcraft/res/FOOTMAN.png");
+		final Texture sheet = am.get("../core/assets/FOOTMAN.png");
 		final TextureRegion[][] tiles = TextureRegion.split(sheet, 48, 48);
 				
 		

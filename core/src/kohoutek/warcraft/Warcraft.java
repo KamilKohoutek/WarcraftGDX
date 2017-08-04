@@ -25,14 +25,14 @@ public class Warcraft extends Game {
 		am = new AssetManager();
 		
 		// enqueue assets for loading
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/PEASANT.png", Texture.class);
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/FOOTMAN.png", Texture.class);
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/GRUNT.png", Texture.class);
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/BUILDINGS_O.png", Texture.class);
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/BUILDINGS_H.png", Texture.class);
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/PEASANT.png", Texture.class);		
+		am.load("../core/assets/PEASANT.png", Texture.class);
+		am.load("../core/assets/FOOTMAN.png", Texture.class);
+		am.load("../core/assets/GRUNT.png", Texture.class);
+		am.load("../core/assets/BUILDINGS_O_edit.png", Texture.class);
+		am.load("../core/assets/BUILDINGS_H_edit.png", Texture.class);
+		am.load("../core/assets/PEASANT.png", Texture.class);		
 		am.setLoader(TiledMap.class, new TmxMapLoader());
-		am.load("C:/Users/Kamil/Documents/warcraft/warcraft/res/map1.tmx", TiledMap.class);
+		am.load("../core/assets/map1.tmx", TiledMap.class);
 				
 		gameplayScr = new GameplayScreen(am);
 
