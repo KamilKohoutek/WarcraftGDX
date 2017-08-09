@@ -26,7 +26,6 @@ public class AnimationRenderSystem extends IteratingSystem {
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
 	private final ComponentMapper<ScaleComponent> sc = ComponentMapper.getFor(ScaleComponent.class);
 	
-	@SuppressWarnings("unchecked")
 	public AnimationRenderSystem(Batch batch) {
 		super(Family.all(RenderableComponent.class, AnimationComponent.class, PositionComponent.class, ScaleComponent.class).get());
 		this.batch = batch;

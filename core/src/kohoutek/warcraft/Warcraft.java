@@ -13,11 +13,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 
-import kohoutek.warcraft.screens.GameplayScreen;
+import kohoutek.warcraft.screens.Gameplay;
 
 public class Warcraft extends Game {
 	private AssetManager am;
-	private GameplayScreen gameplayScr;
+	private Gameplay gameplayScr;
 	
 
 	@Override
@@ -25,34 +25,26 @@ public class Warcraft extends Game {
 		am = new AssetManager();
 		
 		// enqueue assets for loading
-		am.load("../core/assets/PEASANT.png", Texture.class);
-		am.load("../core/assets/FOOTMAN.png", Texture.class);
-		am.load("../core/assets/GRUNT.png", Texture.class);
-		am.load("../core/assets/BUILDINGS_O_edit.png", Texture.class);
-		am.load("../core/assets/BUILDINGS_H_edit.png", Texture.class);
-		am.load("../core/assets/PEASANT.png", Texture.class);		
+		am.load("../core/assets/PEASANT.png", 			Texture.class);
+		am.load("../core/assets/FOOTMAN.png", 			Texture.class);
+		am.load("../core/assets/GRUNT.png", 			Texture.class);
+		am.load("../core/assets/BUILDINGS_O_edit.png", 	Texture.class);
+		am.load("../core/assets/BUILDINGS_H_edit.png", 	Texture.class);
+		am.load("../core/assets/PEASANT.png", 			Texture.class);		
 		am.setLoader(TiledMap.class, new TmxMapLoader());
-		am.load("../core/assets/map1.tmx", TiledMap.class);
+		am.load("../core/assets/map1.tmx", 				TiledMap.class);
 				
-		gameplayScr = new GameplayScreen(am);
-
+		gameplayScr = new Gameplay(am);
 	}
 	
 	@Override
-	public void render(){		
+	public void render(){
 		if(am.update()) {
 			if(getScreen() != gameplayScr) setScreen(gameplayScr);
 	    } else {
 	    	float progress = am.getProgress();
 		    System.out.println((int)(progress * 100) + " %");
-	    }
-		
+	    }		
 		super.render();
 	}
-
-
-	
-	
-	
-
 }

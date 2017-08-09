@@ -6,5 +6,7 @@ public class Common {
 	public static enum Race {
 		HUMAN, ORC
 	}
+	
+	
 
 }

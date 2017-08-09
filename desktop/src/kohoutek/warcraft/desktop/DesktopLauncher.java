@@ -12,11 +12,12 @@ public class DesktopLauncher {
 		
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.backgroundFPS 	= -1;
-		config.foregroundFPS	= 30;
-		config.width			= 800;
-		config.height			= 600;
+		config.foregroundFPS	= 60;
+		config.width			= 1280;
+		config.height			= 800;
 		config.resizable		= true;
 		config.useGL30			= false;
+		config.title			= "WarcraftGDX";
 		new LwjglApplication(new Warcraft(), config);
 	}
 }

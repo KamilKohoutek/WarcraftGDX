@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Rectangle;
 
 import kohoutek.warcraft.SelectionRect;
 import kohoutek.warcraft.entitystuff.components.BoundsComponent;
+import kohoutek.warcraft.entitystuff.components.OwnerComponent;
 import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.SelectableComponent;
@@ -24,37 +25,32 @@ public class SelectionSystem extends IteratingSystem {
 	private final ComponentMapper<SelectableComponent> sc = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
 	private final ComponentMapper<BoundsComponent> bc = ComponentMapper.getFor(BoundsComponent.class);
+	private final ComponentMapper<OwnerComponent> oc = ComponentMapper.getFor(OwnerComponent.class);
 
-	@SuppressWarnings("unchecked")
 	public SelectionSystem(final SelectionRect selectionRect) {
-		super(Family.all(SelectableComponent.class, RenderableComponent.class, PositionComponent.class, BoundsComponent.class).get());
+		super(Family.all(SelectableComponent.class, RenderableComponent.class, PositionComponent.class, BoundsComponent.class, OwnerComponent.class).get());
 		this.selectionRect = selectionRect;
 		
+		// processing every frame is unnecessary, only needed when player is dragging the mouse
 		setProcessing(false);
 	}
 
 	@Override
-	protected void processEntity(Entity entity, float deltaTime) {
-		//if(selectionRect.area() < 3) return;
-		
+	protected void processEntity(Entity entity, float deltaTime) {		
 		final SelectableComponent selectable = sc.get(entity);
 		final PositionComponent pos = pc.get(entity);
 		final BoundsComponent bounds = bc.get(entity);
+		final OwnerComponent owner = oc.get(entity);
 		
 		final Rectangle tmp = new Rectangle(bounds);
 		tmp.x += pos.x;
-		tmp.y += pos.y;
-		
-		System.out.println(selectable.selected);
-		
+		tmp.y += pos.y;		
 		
 		if(selectionRect.overlaps(tmp)){
-			selectable.selected = true;			
+			selectable.selectedBy = owner.owner;		
 		} else {
-			selectable.selected = false;
+			selectable.selectedBy = null;
 		}
-
-
 	}
 
 }

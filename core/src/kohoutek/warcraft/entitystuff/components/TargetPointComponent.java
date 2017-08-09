@@ -15,6 +15,10 @@ public class TargetPointComponent extends Vector2 implements Component {
 		super(x, y);
 	}
 	
+	public TargetPointComponent(Vector2 point) {
+		super(point);
+	}
+	
 	
 
 }
