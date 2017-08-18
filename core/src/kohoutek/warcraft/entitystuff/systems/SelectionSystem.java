@@ -1,5 +1,7 @@
 package kohoutek.warcraft.entitystuff.systems;
 
+import java.util.ArrayList;
+
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
@@ -19,13 +21,16 @@ import kohoutek.warcraft.entitystuff.components.SelectableComponent;
  */
 public class SelectionSystem extends IteratingSystem {
 	
-	// reference to the selectionRect instance
+	/** reference to the selectionRect instance **/
 	private final SelectionRect selectionRect;
 	
 	private final ComponentMapper<SelectableComponent> sc = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
 	private final ComponentMapper<BoundsComponent> bc = ComponentMapper.getFor(BoundsComponent.class);
 	private final ComponentMapper<OwnerComponent> oc = ComponentMapper.getFor(OwnerComponent.class);
+	
+	/** currently selected **/
+	private ArrayList<Entity> alreadySelected = new ArrayList<Entity>();
 
 	public SelectionSystem(final SelectionRect selectionRect) {
 		super(Family.all(SelectableComponent.class, RenderableComponent.class, PositionComponent.class, BoundsComponent.class, OwnerComponent.class).get());
@@ -46,11 +51,26 @@ public class SelectionSystem extends IteratingSystem {
 		tmp.x += pos.x;
 		tmp.y += pos.y;		
 		
-		if(selectionRect.overlaps(tmp)){
-			selectable.selectedBy = owner.owner;		
+		
+		if(selectionRect.overlaps(tmp)) {
+			selectable.selectedBy = owner.owner;
+			
+			if(!alreadySelected.contains(entity)) {
+				alreadySelected.add(entity);
+			}
 		} else {
 			selectable.selectedBy = null;
 		}
+	}
+	
+	public void reset() {
+		alreadySelected.clear();
+		//setProcessing(false);
+	}
+	
+	public int countSelected() {
+		return alreadySelected.size();
+		
 	}
 
 }

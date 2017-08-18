@@ -51,9 +51,7 @@ public class AnimationOrientationSystem extends IteratingSystem {
 		// calculate direction angle
 		int angle = (int)Math.toDegrees(Math.atan2(point.y - center.y, point.x - center.x ));
 		// ensure 0-360 deg range
-	   	if (angle < 0) {
-    	    angle += 360;
-	   	}
+    	angle += (angle < 0) ? 360 : 0;
 		
 	   	// determine index of animation based on direction angle
 	    int index = 0;
@@ -76,7 +74,6 @@ public class AnimationOrientationSystem extends IteratingSystem {
 	    anim.anims.get(index).setPlayMode(PlayMode.LOOP_PINGPONG);
 	    entity.add(new AnimationComponent(anim.anims.get(index)));
 	    entity.remove(Animation8xComponent.class);
-	    
 	}
 
 }

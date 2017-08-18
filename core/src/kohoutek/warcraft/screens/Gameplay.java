@@ -1,40 +1,32 @@
 package kohoutek.warcraft.screens;
 
 import com.badlogic.ashley.core.Engine;
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.Family;
-import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import kohoutek.warcraft.Common.Race;
 import kohoutek.warcraft.Player;
 import kohoutek.warcraft.SelectionRect;
-import kohoutek.warcraft.entitystuff.EntityEngine;
-import kohoutek.warcraft.entitystuff.components.BoundsComponent;
-import kohoutek.warcraft.entitystuff.components.PositionComponent;
-import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.entities.Footman;
+import kohoutek.warcraft.entitystuff.systems.AnimationOrientationSystem;
+import kohoutek.warcraft.entitystuff.systems.AnimationRenderSystem;
+import kohoutek.warcraft.entitystuff.systems.BoundsRenderSystem;
+import kohoutek.warcraft.entitystuff.systems.MovementSystem;
+import kohoutek.warcraft.entitystuff.systems.SelectionSystem;
+import kohoutek.warcraft.entitystuff.systems.TargetSystem;
 
 
 public class Gameplay implements Screen, InputProcessor {
@@ -50,7 +42,7 @@ public class Gameplay implements Screen, InputProcessor {
 	private OrthographicCamera 			cam;
 	private OrthogonalTiledMapRenderer 	mRenderer;
 	private ShapeRenderer				sRenderer;
-	private EntityEngine 				entityEngine;
+	private Engine 						entityEngine;
 	
 	private final Player[] players = new Player[] {new Player(Race.HUMAN), new Player(Race.ORC)};
 
@@ -67,12 +59,14 @@ public class Gameplay implements Screen, InputProcessor {
 		mRenderer 		= new OrthogonalTiledMapRenderer(map);
 		sRenderer 		= new ShapeRenderer();
 		cam 			= new OrthographicCamera();
-		entityEngine	= new EntityEngine( mRenderer.getBatch(), 
-											selectionRect, 
-											sRenderer, 
-											targetPoint, 
-											am, 
-											players );
+		entityEngine	= new Engine();
+		
+		entityEngine.addSystem(new AnimationRenderSystem(mRenderer.getBatch()));
+		entityEngine.addSystem(new MovementSystem());
+		entityEngine.addSystem(new AnimationOrientationSystem());
+		entityEngine.addSystem(new SelectionSystem(selectionRect));
+		entityEngine.addSystem(new TargetSystem(targetPoint));
+		entityEngine.addSystem(new BoundsRenderSystem(sRenderer));
 		
 		Gdx.input.setInputProcessor(this);
 	}
@@ -82,7 +76,7 @@ public class Gameplay implements Screen, InputProcessor {
 	public void render(float delta) {	
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		System.out.println("Entities active: " + entityEngine.getEntities().size());
+		//System.out.println("Entities active: " + entityEngine.getEntities().size());
 		
 		// controlling the camera with mouse	
 		if(Gdx.input.getX() >= Gdx.graphics.getWidth() - 40){		
@@ -110,10 +104,12 @@ public class Gameplay implements Screen, InputProcessor {
 		sRenderer.setProjectionMatrix(cam.combined);
 		
 		// update & draw entites
-		entityEngine.update(delta);
+		entityEngine.update(delta);		
+		
+		entityEngine.getSystem(TargetSystem.class).setProcessing(false);
 		
 		// spawn footmen, java stronk! testing allocations	
-		for(int i = 0; i < 4; i++) {
+		for(int i = 0; i < 1; i++) {
 			entityEngine.addEntity(new Footman(MathUtils.random(64, 1800), MathUtils.random(64,1750),am,players[0]));
 		}
 
@@ -156,7 +152,7 @@ public class Gameplay implements Screen, InputProcessor {
 	}
 	
 	
-	/** INPUT PROCESSING **/
+	/*************** INPUT PROCESSING ***************/
 	
 	@Override
 	public boolean keyDown(int keycode) {
@@ -174,20 +170,27 @@ public class Gameplay implements Screen, InputProcessor {
 	}
 
 	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {	
-		Vector3 screenToWorld 	= cam.unproject(new Vector3(screenX, screenY, 0));
-		if(button == Buttons.LEFT){		
-			selectionRect.x 		= screenToWorld.x;
-			selectionRect.y 		= screenToWorld.y;		
-			selectionRect.width 	= 0;
-			selectionRect.height 	= 0;
-			
-			entityEngine.ss.setProcessing(true);
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {			
+		final Vector3 screenToWorld = cam.unproject(new Vector3(screenX, screenY, 0));
+		final SelectionSystem ss 	= entityEngine.getSystem(SelectionSystem.class);		
+		final int selectedCount 	= ss.countSelected();
+		if(button == Buttons.LEFT){			
+			if(selectedCount == 0) {
+				selectionRect.x 		= screenToWorld.x;
+				selectionRect.y 		= screenToWorld.y;		
+				selectionRect.width 	= 0;
+				selectionRect.height 	= 0;		
+				ss.setProcessing(true);
+			} else {
+				//ss.setProcessing(false);
+				ss.reset();			
+			}			
 		} else if (button == Buttons.RIGHT){
 			targetPoint.x = screenToWorld.x;
 			targetPoint.y = screenToWorld.y;
 			
-			entityEngine.ts.setProcessing(true);
+			final TargetSystem ts = entityEngine.getSystem(TargetSystem.class);
+			ts.prepare(selectedCount);
 		}
 		return false;
 	}
@@ -200,7 +203,8 @@ public class Gameplay implements Screen, InputProcessor {
 			selectionRect.width 	= 0;
 			selectionRect.height 	= 0;
 			
-			entityEngine.ss.setProcessing(false);
+			entityEngine.getSystem(SelectionSystem.class).setProcessing(false);;
+
 		}
 		return false;
 	}

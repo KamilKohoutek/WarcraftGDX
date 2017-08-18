@@ -24,14 +24,16 @@ import kohoutek.warcraft.entitystuff.components.StateComponent.EntityState;
  */
 public class TargetSystem extends IteratingSystem {
 	
-	// reference to the targetPoint being used
+	/** reference to the targetPoint being used **/
 	private final Vector2 targetPoint;
 	
-	private final ComponentMapper<SelectableComponent> 	sc 	= ComponentMapper.getFor(SelectableComponent.class);
-	private final ComponentMapper<OwnerComponent> 		oc 	= ComponentMapper.getFor(OwnerComponent.class);
+	/** deviation from targetPoint when 2+ entities are moving towards the same point**/
+	private int gap = 0;
+	private int mul = 40; 
 	
+	private final ComponentMapper<SelectableComponent> 	sc 	= ComponentMapper.getFor(SelectableComponent.class);
+	private final ComponentMapper<OwnerComponent> 		oc 	= ComponentMapper.getFor(OwnerComponent.class);	
 	private final ComponentMapper<StateAnimationsComponent> sac = ComponentMapper.getFor(StateAnimationsComponent.class);
-	//private final ComponentMapper<TargetPointComponent>		tpc = ComponentMapper.getFor(TargetPointComponent.class);
 
 	public TargetSystem(final Vector2 targetPoint) {
 		super(Family.all(RenderableComponent.class, SelectableComponent.class, PositionComponent.class, BoundsComponent.class, OwnerComponent.class).get());
@@ -47,21 +49,26 @@ public class TargetSystem extends IteratingSystem {
 		final OwnerComponent owner = oc.get(entity);
 		final SelectableComponent selectable = sc.get(entity);
 		
-		// these may be null
+		// this may be null
 		final StateAnimationsComponent stateAnims = sac.get(entity);
-		//final TargetPointComponent curTarget = tpc.get(entity);
 		
-		if(selectable.selectedBy == owner.owner /*&& (curTarget != null && !MathUtils.isEqual(targetPoint.angle(),curTarget.angle(), 1.5f))*/) {
-			entity.add(new TargetPointComponent(targetPoint));
+		if(selectable.selectedBy == owner.owner) {	
+			gap -= (gap >= mul) ? mul : 0;
+			entity.add(new TargetPointComponent(targetPoint.x + gap, targetPoint.y));	
 
 			if(stateAnims != null) {
 				entity.add(new Animation8xComponent(stateAnims.movement));
-			}
+			}		
 			entity.add(new StateComponent(EntityState.MOVING));
 		}
 		
 		setProcessing(false);	
 		
+	}
+	
+	public void prepare(int selectedCount) {
+		gap = selectedCount * mul;
+		setProcessing(true);
 	}
 
 }
