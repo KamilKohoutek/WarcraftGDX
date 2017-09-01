@@ -9,10 +9,9 @@ import com.badlogic.gdx.math.Vector2;
 
 import kohoutek.warcraft.entitystuff.components.Animation8xComponent;
 import kohoutek.warcraft.entitystuff.components.BoundsComponent;
-import kohoutek.warcraft.entitystuff.components.OwnerComponent;
 import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.RenderableComponent;
-import kohoutek.warcraft.entitystuff.components.SelectableComponent;
+import kohoutek.warcraft.entitystuff.components.SelectedComponent;
 import kohoutek.warcraft.entitystuff.components.StateAnimationsComponent;
 import kohoutek.warcraft.entitystuff.components.StateComponent;
 import kohoutek.warcraft.entitystuff.components.TargetPointComponent;
@@ -29,14 +28,12 @@ public class TargetSystem extends IteratingSystem {
 	
 	/** deviation from targetPoint when 2+ entities are moving towards the same point**/
 	private int gap = 0;
-	private int mul = 40; 
+	private int mul = 40; // multiplier
 	
-	private final ComponentMapper<SelectableComponent> 	sc 	= ComponentMapper.getFor(SelectableComponent.class);
-	private final ComponentMapper<OwnerComponent> 		oc 	= ComponentMapper.getFor(OwnerComponent.class);	
 	private final ComponentMapper<StateAnimationsComponent> sac = ComponentMapper.getFor(StateAnimationsComponent.class);
 
 	public TargetSystem(final Vector2 targetPoint) {
-		super(Family.all(RenderableComponent.class, SelectableComponent.class, PositionComponent.class, BoundsComponent.class, OwnerComponent.class).get());
+		super(Family.all(RenderableComponent.class, SelectedComponent.class, PositionComponent.class, BoundsComponent.class).get());
 		this.targetPoint = targetPoint;
 		
 		// should only be processed when user right-clicks
@@ -45,28 +42,28 @@ public class TargetSystem extends IteratingSystem {
 	}
 
 	@Override
-	protected void processEntity(Entity entity, float deltaTime) {
-		final OwnerComponent owner = oc.get(entity);
-		final SelectableComponent selectable = sc.get(entity);
-		
+	protected void processEntity(Entity entity, float deltaTime) {	
 		// this may be null
 		final StateAnimationsComponent stateAnims = sac.get(entity);
-		
-		if(selectable.selectedBy == owner.owner) {	
-			gap -= (gap >= mul) ? mul : 0;
-			entity.add(new TargetPointComponent(targetPoint.x + gap, targetPoint.y));	
+			
+		gap -= (gap >= mul) ? mul : 0;
+		entity.add(new TargetPointComponent(targetPoint.x + gap, targetPoint.y));	
 
-			if(stateAnims != null) {
-				entity.add(new Animation8xComponent(stateAnims.movement));
-			}		
-			entity.add(new StateComponent(EntityState.MOVING));
-		}
+		if(stateAnims != null) {
+			entity.add(new Animation8xComponent(stateAnims.movement));
+		}		
+		entity.add(new StateComponent(EntityState.MOVING));
+		
 		
 		setProcessing(false);	
 		
 	}
 	
-	public void prepare(int selectedCount) {
+	/**
+	 * Call this after assigning targetPoint coords
+	 * @param selectedCount
+	 */
+	public void prepare(final int selectedCount) {
 		gap = selectedCount * mul;
 		setProcessing(true);
 	}

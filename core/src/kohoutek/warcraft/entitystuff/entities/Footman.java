@@ -19,8 +19,6 @@ import kohoutek.warcraft.entitystuff.components.OwnerComponent;
 import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.ScaleComponent;
-import kohoutek.warcraft.entitystuff.components.SelectableComponent;
-import kohoutek.warcraft.entitystuff.components.SolidComponent;
 import kohoutek.warcraft.entitystuff.components.SpeedComponent;
 import kohoutek.warcraft.entitystuff.components.StateAnimationsComponent;
 import kohoutek.warcraft.entitystuff.components.StateComponent;
@@ -28,35 +26,37 @@ import kohoutek.warcraft.entitystuff.components.StateComponent.EntityState;
 import kohoutek.warcraft.entitystuff.components.TargetPointComponent;
 import static kohoutek.warcraft.entitystuff.components.Animation8xComponent.*;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-public class Footman extends Entity {
+
+public class Footman extends Entity implements java.io.Serializable {
+	private static final long serialVersionUID = 6168245266013892556L;
+	
 	public static final int COST_GOLD 	= 0;
 	public static final int COST_LUMBER = 0;
-	public static final int COST_FOOD 	= 0;
+	public static final int COST_FOOD 	= 4;
 	
 	/** to be reused by all instances of this class for memory efficiency **/
 	private static final TextureRegion[][] REGIONS = new TextureRegion[16][3];
 	
-	public Footman(int x, int y, final AssetManager am, final Player owner){
+	private final AssetManager am;
+	
+	public Footman(final AssetManager am) {
 		super();
+		this.am = am;
+	}
+	
+	public Footman(final int x, final int y, final AssetManager am, final Player owner){
+		this(am);
 
 		final PositionComponent pos = new PositionComponent(x, y);
-		final Vector2 initialTargetPoint = new Vector2(x + 48, y + 48 + 130);
+		final Vector2 initialTargetPoint = new Vector2(x + 48, y + 48);
 		
 		final Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>(8);
-		final Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>(8);
-		final Array<Animation<TextureRegion>> death = new Array<Animation<TextureRegion>>(8);
-				
-		for(TextureRegion[] array : REGIONS) {
-			for(TextureRegion region : array) {
-				if(region == null) {
-					initRegions(am);
-					break;
-				}
-			}
-		}
-					
+		final Array<Animation<TextureRegion>> attack = 	new Array<Animation<TextureRegion>>(8);
+		final Array<Animation<TextureRegion>> death = 	new Array<Animation<TextureRegion>>(8);
 		
 	     //walk animations
 		Animation<TextureRegion> anim = new Animation<TextureRegion>(0.25f,REGIONS[0]);
@@ -134,10 +134,9 @@ public class Footman extends Entity {
 		add(new SpeedComponent(32));
 		add(new TargetPointComponent(initialTargetPoint));
 		add(new ScaleComponent(2 ,2));
-		add(new SelectableComponent());
 		add(new StateComponent(EntityState.MOVING));
 		add(new StateAnimationsComponent(movement, attack, null));
-		add(new OwnerComponent(owner));	
+		add(new OwnerComponent(owner.id));	
 		add(new Animation8xComponent(movement));
 	}
 	
@@ -145,7 +144,7 @@ public class Footman extends Entity {
 	 * Initialize regions we need for animations
 	 * @param am
 	 */
-	private static void initRegions(final AssetManager am) {
+	public static void initRegions(final AssetManager am) {
 		final Texture sheet = am.get("../core/assets/FOOTMAN.png");
 		final TextureRegion[][] tiles = TextureRegion.split(sheet, 48, 48);
 		
@@ -256,4 +255,32 @@ public class Footman extends Entity {
 		REGIONS[15][2] = tiles[2][8];
 			
 	}
+	
+	private void writeObject(ObjectOutputStream stream) throws IOException { 
+		HealthComponent health = getComponent(HealthComponent.class);
+		PositionComponent pos = getComponent(PositionComponent.class);
+		TargetPointComponent target = getComponent(TargetPointComponent.class);
+		StateComponent state = getComponent(StateComponent.class);
+		OwnerComponent owner = getComponent(OwnerComponent.class);
+		stream.writeFloat(pos.x);
+		stream.writeFloat(pos.y);
+		stream.writeInt(health.hp);
+		stream.writeInt(health.maxHP);
+		stream.writeFloat(target.x);
+		stream.writeFloat(target.y);
+		stream.writeInt(owner.id);
+		stream.writeObject(state.state);
+
+
+	}
+			  
+	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {  
+		add(new PositionComponent(stream.readFloat(), stream.readFloat()));
+		add(new HealthComponent(stream.readInt(), stream.readInt()));
+		add(new TargetPointComponent(stream.readFloat(), stream.readFloat()));
+		add(new OwnerComponent(stream.readInt()));
+		add(new StateComponent((EntityState)stream.readObject()));
+
+	}
+
 }

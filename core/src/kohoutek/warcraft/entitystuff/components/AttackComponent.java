@@ -7,13 +7,11 @@ public class AttackComponent implements Component {
 	public final int damage;
 	public final int range;
 	public final float speed;
-	public final Entity victim;
 	
-	public AttackComponent(int damage, float speed, int range, Entity victim){
+	public AttackComponent(int damage, float speed, int range){
 		this.damage = damage;
 		this.speed = speed;
 		this.range = range;
-		this.victim = victim;
 	}
 
 }

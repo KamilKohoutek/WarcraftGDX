@@ -1,10 +1,19 @@
 package kohoutek.warcraft.screens;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import com.badlogic.ashley.core.Engine;
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Buttons;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -12,15 +21,19 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-import kohoutek.warcraft.Common.Race;
+import kohoutek.warcraft.Race;
 import kohoutek.warcraft.Player;
 import kohoutek.warcraft.SelectionRect;
+import kohoutek.warcraft.entitystuff.components.OwnerComponent;
+import kohoutek.warcraft.entitystuff.components.PositionComponent;
 import kohoutek.warcraft.entitystuff.entities.Footman;
+import kohoutek.warcraft.entitystuff.entities.HumanFarm;
 import kohoutek.warcraft.entitystuff.systems.AnimationOrientationSystem;
 import kohoutek.warcraft.entitystuff.systems.AnimationRenderSystem;
 import kohoutek.warcraft.entitystuff.systems.BoundsRenderSystem;
@@ -36,37 +49,71 @@ public class Gameplay implements Screen, InputProcessor {
 	
 	// player contorl
 	private final SelectionRect			selectionRect;
-	private final Vector2				targetPoint;
-	
+	private final Vector2				targetPoint;	
+
+	private String						mapName;
 	private TiledMap 					map;
 	private OrthographicCamera 			cam;
 	private OrthogonalTiledMapRenderer 	mRenderer;
 	private ShapeRenderer				sRenderer;
 	private Engine 						entityEngine;
 	
-	private final Player[] players = new Player[] {new Player(Race.HUMAN), new Player(Race.ORC)};
+	private SelectionSystem				ss;
+	private TargetSystem				ts;
+	
+	private final Player[] players;
 
-	public Gameplay(AssetManager am){
+	private Gameplay(final AssetManager am) {
 		this.am = am;
 		
-		selectionRect = new SelectionRect();		
-		targetPoint = new Vector2();
-	}
-	
-	@Override
-	public void show() {					
-		map 			= am.get("../core/assets/map1.tmx", TiledMap.class);
-		mRenderer 		= new OrthogonalTiledMapRenderer(map);
-		sRenderer 		= new ShapeRenderer();
 		cam 			= new OrthographicCamera();
-		entityEngine	= new Engine();
+		sRenderer 		= new ShapeRenderer();
+		entityEngine 	= new Engine();
+		selectionRect 	= new SelectionRect();
+		targetPoint 	= new Vector2();	
+		players 		= new Player[]{new Player(Race.HUMAN, 0), new Player(Race.ORC, 1)};
+
+	}
+
+	public Gameplay(final AssetManager am, final String mapName) {
+		this(am);	
+		this.mapName = mapName;
+				
+		map 			= new TmxMapLoader().load("../core/assets/" + mapName + ".tmx");
+		mRenderer 		= new OrthogonalTiledMapRenderer(map);
+		
+		ss 				= new SelectionSystem(selectionRect);
+		ts 				= new TargetSystem(targetPoint);
 		
 		entityEngine.addSystem(new AnimationRenderSystem(mRenderer.getBatch()));
 		entityEngine.addSystem(new MovementSystem());
 		entityEngine.addSystem(new AnimationOrientationSystem());
-		entityEngine.addSystem(new SelectionSystem(selectionRect));
-		entityEngine.addSystem(new TargetSystem(targetPoint));
+		entityEngine.addSystem(ss);
+		entityEngine.addSystem(ts);
 		entityEngine.addSystem(new BoundsRenderSystem(sRenderer));
+
+		
+	}
+	
+	public Gameplay(final AssetManager am, final ObjectInputStream stream) {
+		this(am);
+		
+		Object[] objects = null;
+		try {
+			objects = (Object[])stream.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		} finally {
+			// restore object states
+			
+		}
+	}
+	
+	@Override
+	public void show() {						
+		for(int i = 0; i < 4; i++) {
+			entityEngine.addEntity(new Footman(MathUtils.random(64, 500), MathUtils.random(64,500),am,players[0]));
+		}
 		
 		Gdx.input.setInputProcessor(this);
 	}
@@ -76,7 +123,6 @@ public class Gameplay implements Screen, InputProcessor {
 	public void render(float delta) {	
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		//System.out.println("Entities active: " + entityEngine.getEntities().size());
 		
 		// controlling the camera with mouse	
 		if(Gdx.input.getX() >= Gdx.graphics.getWidth() - 40){		
@@ -106,18 +152,11 @@ public class Gameplay implements Screen, InputProcessor {
 		// update & draw entites
 		entityEngine.update(delta);		
 		
-		entityEngine.getSystem(TargetSystem.class).setProcessing(false);
-		
-		// spawn footmen, java stronk! testing allocations	
-		for(int i = 0; i < 1; i++) {
-			entityEngine.addEntity(new Footman(MathUtils.random(64, 1800), MathUtils.random(64,1750),am,players[0]));
-		}
 
 		// draw selection rectangle
 		sRenderer.begin(ShapeType.Line);
 		sRenderer.rect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height, Color.GREEN, Color.GREEN, Color.GREEN, Color.GREEN);
 		sRenderer.end();
-
 	}
 	
 
@@ -125,7 +164,7 @@ public class Gameplay implements Screen, InputProcessor {
 	public void resize(int width, int height) {
 		cam.viewportHeight = height;
 		cam.viewportWidth = width;
-		cam.update();	
+		cam.update();
 	}
 
 	@Override
@@ -140,7 +179,7 @@ public class Gameplay implements Screen, InputProcessor {
 
 	@Override
 	public void hide() {
-		dispose();		
+		//dispose();		
 	}
 
 	@Override
@@ -148,7 +187,6 @@ public class Gameplay implements Screen, InputProcessor {
 		map.dispose();
 		mRenderer.dispose();
 		sRenderer.dispose();
-		//entityEngine.removeAllEntities();
 	}
 	
 	
@@ -161,6 +199,29 @@ public class Gameplay implements Screen, InputProcessor {
 
 	@Override
 	public boolean keyUp(int keycode) {
+		switch(keycode){
+		case Keys.F5:
+			// TODO save game
+			
+			ObjectOutputStream o = null;
+			try {
+				o = new ObjectOutputStream(new FileOutputStream("C:/Users/Kamil/Desktop/out.txt", false));
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				o.writeObject(((Footman)(entityEngine.getEntities().get(1))));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			break;
+		}
 		return false;
 	}
 
@@ -171,10 +232,11 @@ public class Gameplay implements Screen, InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {			
-		final Vector3 screenToWorld = cam.unproject(new Vector3(screenX, screenY, 0));
-		final SelectionSystem ss 	= entityEngine.getSystem(SelectionSystem.class);		
+		final Vector3 screenToWorld = cam.unproject(new Vector3(screenX, screenY, 0));	
 		final int selectedCount 	= ss.countSelected();
-		if(button == Buttons.LEFT){			
+		
+		switch(button){
+		case Buttons.LEFT:
 			if(selectedCount == 0) {
 				selectionRect.x 		= screenToWorld.x;
 				selectionRect.y 		= screenToWorld.y;		
@@ -182,15 +244,17 @@ public class Gameplay implements Screen, InputProcessor {
 				selectionRect.height 	= 0;		
 				ss.setProcessing(true);
 			} else {
-				//ss.setProcessing(false);
-				ss.reset();			
-			}			
-		} else if (button == Buttons.RIGHT){
+				ss.clearSelected();		
+			}
+			break;			
+		case Buttons.RIGHT:
 			targetPoint.x = screenToWorld.x;
 			targetPoint.y = screenToWorld.y;
 			
-			final TargetSystem ts = entityEngine.getSystem(TargetSystem.class);
+			// after defining target coords, this must be called
 			ts.prepare(selectedCount);
+			
+			break;
 		}
 		return false;
 	}
@@ -203,16 +267,18 @@ public class Gameplay implements Screen, InputProcessor {
 			selectionRect.width 	= 0;
 			selectionRect.height 	= 0;
 			
-			entityEngine.getSystem(SelectionSystem.class).setProcessing(false);;
-
+			ss.setProcessing(false);
+			ss.clearSelected();
 		}
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {	
-		selectionRect.width += Gdx.input.getDeltaX();
-		selectionRect.height -= Gdx.input.getDeltaY();
+		if(selectionRect.x + selectionRect.y > 0) {
+			selectionRect.width += Gdx.input.getDeltaX();
+			selectionRect.height -= Gdx.input.getDeltaY();
+		}
 		return false;
 	}
 

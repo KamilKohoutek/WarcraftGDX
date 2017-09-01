@@ -5,10 +5,10 @@ import com.badlogic.ashley.core.Component;
 import kohoutek.warcraft.Player;
 
 public class OwnerComponent implements Component {
-	public Player owner;
+	public int id;
 	
-	public OwnerComponent(Player player){
-		owner = player;
+	public OwnerComponent(final int id){
+		this.id = id;
 	}
 
 }

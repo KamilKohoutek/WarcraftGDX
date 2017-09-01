@@ -45,34 +45,35 @@ public class AnimationOrientationSystem extends IteratingSystem {
 		final BoundsComponent 		bounds 	= bc.get(entity);
 		
 		//get absolute coordinates of bounding rectangle's center
-		final Vector2 center = bounds.getCenter(new Vector2());
+		final Vector2 center = new Vector2();
+		bounds.getCenter(center);		
 		center.add(pos);
 		
-		// calculate direction angle
-		int angle = (int)Math.toDegrees(Math.atan2(point.y - center.y, point.x - center.x ));
+		// calculate facing angle
+		int angle = (int)Math.toDegrees(Math.atan2(point.y - center.y, point.x - center.x));
 		// ensure 0-360 deg range
     	angle += (angle < 0) ? 360 : 0;
 		
-	   	// determine index of animation based on direction angle
-	    int index = 0;
+	   	// determine index of animation based on that angle
+	    int i = 0;
 	    if(angle >= 30 && angle <= 60){
-	        index = 1;
+	        i = 1;
 	    } else if (angle > 60 && angle < 120){
-	        index = 2;
+	        i = 2;
 	    } else if (angle >= 120 && angle <= 150){
-	        index = 3;
+	        i = 3;
 	    } else if (angle > 150 && angle < 210){
-	        index = 4;
+	        i = 4;
 	    } else if (angle >= 210 && angle <= 240){
-	        index = 5;
+	        i = 5;
 	    } else if (angle > 240 && angle < 300){
-	        index = 6;
+	        i = 6;
 	    } else if (angle >= 300 && angle <= 330){
-	        index = 7;
+	        i = 7;
 	    }
 		
-	    anim.anims.get(index).setPlayMode(PlayMode.LOOP_PINGPONG);
-	    entity.add(new AnimationComponent(anim.anims.get(index)));
+	    anim.anims.get(i).setPlayMode(PlayMode.LOOP_PINGPONG);
+	    entity.add(new AnimationComponent(anim.anims.get(i)));
 	    entity.remove(Animation8xComponent.class);
 	}
 
