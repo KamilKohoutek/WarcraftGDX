@@ -31,6 +31,7 @@ public class TargetSystem extends IteratingSystem {
 	private int mul = 40; // multiplier
 	
 	private final ComponentMapper<StateAnimationsComponent> sac = ComponentMapper.getFor(StateAnimationsComponent.class);
+	private final ComponentMapper<StateComponent> sc = ComponentMapper.getFor(StateComponent.class);
 
 	public TargetSystem(final Vector2 targetPoint) {
 		super(Family.all(RenderableComponent.class, SelectedComponent.class, PositionComponent.class, BoundsComponent.class).get());
@@ -43,20 +44,24 @@ public class TargetSystem extends IteratingSystem {
 
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {	
-		// this may be null
+		// these may be null
 		final StateAnimationsComponent stateAnims = sac.get(entity);
+		final StateComponent state = sc.get(entity);
 			
 		gap -= (gap >= mul) ? mul : 0;
 		entity.add(new TargetPointComponent(targetPoint.x + gap, targetPoint.y));	
 
 		if(stateAnims != null) {
 			entity.add(new Animation8xComponent(stateAnims.movement));
-		}		
-		entity.add(new StateComponent(EntityState.MOVING));
-		
-		
-		setProcessing(false);	
-		
+		}
+		if(state != null) {
+			state.state = EntityState.MOVING;
+		} else {
+			entity.add(new StateComponent(EntityState.MOVING));
+		}
+	
+				
+		setProcessing(false);			
 	}
 	
 	/**

@@ -24,7 +24,7 @@ public class Warcraft extends Game {
 	private AssetManager am;
 	private Gameplay gameplayScr;
 	private final String saveName;
-	
+
 	public Warcraft(String saveName) {
 		this.saveName = saveName;
 	}
@@ -63,14 +63,12 @@ public class Warcraft extends Game {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
-				gameplayScr = new Gameplay(am, stream);					
-			}
-			
+				gameplayScr = new Gameplay(stream);					
+			}		
 		} else {
-			gameplayScr = new Gameplay(am, "map1");
+			gameplayScr = new Gameplay("map1");
 		}
 		
-
 		setScreen(gameplayScr);
 	}
 	
@@ -85,6 +83,12 @@ public class Warcraft extends Game {
 		    System.out.println((int)(progress * 100) + " %");
 	    }	*/
 		super.render();
+	}
+	
+	@Override
+	public void dispose() {
+		super.dispose();
+		am.dispose();
 	}
 	
 }

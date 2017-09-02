@@ -17,7 +17,9 @@ import kohoutek.warcraft.entitystuff.components.RenderableComponent;
 import kohoutek.warcraft.entitystuff.components.ScaleComponent;
 
 
-public class HumanFarm extends Entity {
+public class HumanFarm extends Entity implements java.io.Serializable {
+	private static final long serialVersionUID = -1128445823665952610L;
+	
 	public static final int BUILD_TIME 		= 30;
 	public static final int COST_GOLD 		= 500;
 	public static final int COST_LUMBER 	= 300;	
@@ -26,8 +28,12 @@ public class HumanFarm extends Entity {
 	
 	private static final TextureRegion[] REGIONS = new TextureRegion[4];
 	
-	public HumanFarm(final int x, final int y, final AssetManager am, final Player owner, final boolean finishedOnSpawn) {
+	public HumanFarm() {
 		super();
+	}
+	
+	public HumanFarm(final int x, final int y, final Player owner, final boolean finishedOnSpawn) {
+		this();
 		
 		final Animation<TextureRegion> anim = new Animation<TextureRegion>(BUILD_TIME/4f, REGIONS);
 		anim.setPlayMode(PlayMode.NORMAL);	

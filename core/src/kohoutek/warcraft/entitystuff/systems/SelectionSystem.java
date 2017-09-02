@@ -1,8 +1,5 @@
 package kohoutek.warcraft.entitystuff.systems;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
@@ -24,8 +21,7 @@ public class SelectionSystem extends IteratingSystem {
 	
 	/** reference to the selectionRect instance **/
 	private final SelectionRect selectionRect;
-	
-	private ArrayList<Entity> alreadySelected = new ArrayList<Entity>();
+	private int selectedCount = 0;
 	
 	private final ComponentMapper<PositionComponent> pc = ComponentMapper.getFor(PositionComponent.class);
 	private final ComponentMapper<BoundsComponent> bc = ComponentMapper.getFor(BoundsComponent.class);
@@ -49,25 +45,28 @@ public class SelectionSystem extends IteratingSystem {
 		tmp.x += pos.x;
 		tmp.y += pos.y;				
 		
-		if(selectionRect.overlaps(tmp) && owner.id == 0) {
-			entity.add(new SelectedComponent());
-			
-			if(!alreadySelected.contains(entity)) { // REPLACE WITH SELECT COUNT
-				alreadySelected.add(entity);
-			}
+		if(owner.id == 0 && selectionRect.overlaps(tmp)) {
+			 if(!isSelected(entity)){
+				 entity.add(new SelectedComponent());
+				 selectedCount++;
+			 }
 		} else {			
 			entity.remove(SelectedComponent.class);
 		}
 	}
-	
-	public void clearSelected() {
-		alreadySelected.clear();
+
+	public void resetSelectedCount() {
+		selectedCount = 0;
 	}
 	
 	
-	public int countSelected() {
-		return alreadySelected.size();
+	public int getSelectedCount() {
+		return selectedCount;
 		
+	}
+	
+	private static boolean isSelected(final Entity entity) {
+		return entity.getComponent(SelectedComponent.class) != null;
 	}
 
 }

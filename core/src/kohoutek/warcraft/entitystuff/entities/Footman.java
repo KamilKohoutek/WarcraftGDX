@@ -39,103 +39,32 @@ public class Footman extends Entity implements java.io.Serializable {
 	public static final int COST_FOOD 	= 4;
 	
 	/** to be reused by all instances of this class for memory efficiency **/
-	private static final TextureRegion[][] REGIONS = new TextureRegion[16][3];
+	private static final TextureRegion[][] REGIONS = new TextureRegion[18][3];
 	
-	private final AssetManager am;
 	
-	public Footman(final AssetManager am) {
+	public Footman() {
 		super();
-		this.am = am;
 	}
 	
-	public Footman(final int x, final int y, final AssetManager am, final Player owner){
-		this(am);
-
+	public Footman(final int x, final int y, final Player owner){
+		this();
+		
 		final PositionComponent pos = new PositionComponent(x, y);
 		final Vector2 initialTargetPoint = new Vector2(x + 48, y + 48);
 		
-		final Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>(8);
-		final Array<Animation<TextureRegion>> attack = 	new Array<Animation<TextureRegion>>(8);
-		final Array<Animation<TextureRegion>> death = 	new Array<Animation<TextureRegion>>(8);
-		
-	     //walk animations
-		Animation<TextureRegion> anim = new Animation<TextureRegion>(0.25f,REGIONS[0]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(E, anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[1]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(NE, anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[2]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(N,  anim);
-		
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[3]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(NW,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[4]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(W,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[5]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(SW,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[6]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(S,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f,REGIONS[7]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		movement.insert(SE,  anim);	
-		
-		//attack anims
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[8]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(E, anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[9]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(NE, anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[10]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(N,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[11]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(NW,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[12]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(W,  anim);
-
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[13]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(SW,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[14]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(S,  anim);
-		
-		anim = new Animation<TextureRegion>(0.25f, REGIONS[15]);
-		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
-		attack.insert(SE,  anim);	
-			
-		
+		Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>(8);
+		Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>(8);
+		loadAnimArrays(movement, attack);
+					
 		add(pos);
 		add(new BoundsComponent(24,24,48,48));
 		add(new RenderableComponent());
 		add(new HealthComponent(60, 60));
 		add(new SpeedComponent(32));
 		add(new TargetPointComponent(initialTargetPoint));
-		add(new ScaleComponent(2 ,2));
+		add(new ScaleComponent(2, 2));
 		add(new StateComponent(EntityState.MOVING));
-		add(new StateAnimationsComponent(movement, attack, null));
+		add(new StateAnimationsComponent(movement, attack, deathAnim()));
 		add(new OwnerComponent(owner.id));	
 		add(new Animation8xComponent(movement));
 	}
@@ -253,6 +182,13 @@ public class Footman extends Entity implements java.io.Serializable {
 		REGIONS[15][0] = tiles[0][8];
 		REGIONS[15][1] = tiles[1][8];
 		REGIONS[15][2] = tiles[2][8];
+		
+		REGIONS[16][0] = tiles[0][10];
+		REGIONS[16][1] = tiles[0][11];
+		REGIONS[16][2] = tiles[1][10];
+		REGIONS[17][0] = tiles[0][11];
+		REGIONS[17][1] = tiles[2][10];
+		REGIONS[17][2] = tiles[2][11];
 			
 	}
 	
@@ -271,7 +207,6 @@ public class Footman extends Entity implements java.io.Serializable {
 		stream.writeInt(owner.id);
 		stream.writeObject(state.state);
 
-
 	}
 			  
 	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {  
@@ -279,8 +214,108 @@ public class Footman extends Entity implements java.io.Serializable {
 		add(new HealthComponent(stream.readInt(), stream.readInt()));
 		add(new TargetPointComponent(stream.readFloat(), stream.readFloat()));
 		add(new OwnerComponent(stream.readInt()));
-		add(new StateComponent((EntityState)stream.readObject()));
-
+		final EntityState state = (EntityState)stream.readObject();
+		add(new StateComponent(state));
+		
+		add(new SpeedComponent(32));
+		add(new ScaleComponent(2, 2));	
+		add(new BoundsComponent(24,24,48,48));
+		add(new RenderableComponent());
+		
+		Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>(8);
+		Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>(8);
+		Animation<TextureRegion> death = deathAnim();
+		loadAnimArrays(movement, attack);
+		
+		switch(state){
+		case MOVING:
+			add(new Animation8xComponent(movement));
+			break;
+		case IDLE:
+			add(new Animation8xComponent(movement));
+			break;
+		case ATTACKING:
+			add(new Animation8xComponent(attack));
+			break;
+		case DYING:
+			add(new AnimationComponent(death));
+			break;
+		}
+		
+		add(new StateAnimationsComponent(movement, attack, death));	
 	}
+	
+	
+	private static void loadAnimArrays(final Array<Animation<TextureRegion>> movement, final Array<Animation<TextureRegion>> attack){
+		// walk anims
+		Animation<TextureRegion> anim = new Animation<TextureRegion>(0.25f,REGIONS[0]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(E, anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[1]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(NE, anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[2]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(N,  anim);		
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[3]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(NW,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[4]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(W,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[5]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(SW,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[6]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(S,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f,REGIONS[7]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		movement.insert(SE,  anim);	
+		
+		//attack anims
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[8]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(E, anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[9]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(NE, anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[10]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(N,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[11]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(NW,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[12]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(W,  anim);
 
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[13]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(SW,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[14]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(S,  anim);
+		
+		anim = new Animation<TextureRegion>(0.25f, REGIONS[15]);
+		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
+		attack.insert(SE,  anim);			
+	}
+	
+	private static Animation<TextureRegion> deathAnim() {
+		return new Animation<TextureRegion>(0.25f, new TextureRegion[]{REGIONS[16][0],REGIONS[16][1],REGIONS[16][2],REGIONS[17][0],REGIONS[17][1],REGIONS[17][2]} );
+	}
 }

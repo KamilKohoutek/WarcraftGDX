@@ -14,7 +14,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -32,6 +31,8 @@ import kohoutek.warcraft.Player;
 import kohoutek.warcraft.SelectionRect;
 import kohoutek.warcraft.entitystuff.components.OwnerComponent;
 import kohoutek.warcraft.entitystuff.components.PositionComponent;
+import kohoutek.warcraft.entitystuff.components.StateComponent;
+import kohoutek.warcraft.entitystuff.components.StateComponent.EntityState;
 import kohoutek.warcraft.entitystuff.entities.Footman;
 import kohoutek.warcraft.entitystuff.entities.HumanFarm;
 import kohoutek.warcraft.entitystuff.systems.AnimationOrientationSystem;
@@ -44,14 +45,10 @@ import kohoutek.warcraft.entitystuff.systems.TargetSystem;
 
 public class Gameplay implements Screen, InputProcessor {
 	
-	// reference to the assetmanager being used
-	private final AssetManager 			am;
-	
 	// player contorl
 	private final SelectionRect			selectionRect;
 	private final Vector2				targetPoint;	
 
-	private String						mapName;
 	private TiledMap 					map;
 	private OrthographicCamera 			cam;
 	private OrthogonalTiledMapRenderer 	mRenderer;
@@ -63,57 +60,44 @@ public class Gameplay implements Screen, InputProcessor {
 	
 	private final Player[] players;
 
-	private Gameplay(final AssetManager am) {
-		this.am = am;
-		
+	private Gameplay() {	
 		cam 			= new OrthographicCamera();
 		sRenderer 		= new ShapeRenderer();
-		entityEngine 	= new Engine();
-		selectionRect 	= new SelectionRect();
-		targetPoint 	= new Vector2();	
+		entityEngine 	= new Engine();	
 		players 		= new Player[]{new Player(Race.HUMAN, 0), new Player(Race.ORC, 1)};
+		selectionRect 	= new SelectionRect();
+		targetPoint 	= new Vector2();
 
 	}
 
-	public Gameplay(final AssetManager am, final String mapName) {
-		this(am);	
-		this.mapName = mapName;
+	public Gameplay(final String mapName) {
+		this();	
 				
 		map 			= new TmxMapLoader().load("../core/assets/" + mapName + ".tmx");
 		mRenderer 		= new OrthogonalTiledMapRenderer(map);
 		
 		ss 				= new SelectionSystem(selectionRect);
-		ts 				= new TargetSystem(targetPoint);
+		ts 				= new TargetSystem(targetPoint);		
 		
 		entityEngine.addSystem(new AnimationRenderSystem(mRenderer.getBatch()));
 		entityEngine.addSystem(new MovementSystem());
 		entityEngine.addSystem(new AnimationOrientationSystem());
 		entityEngine.addSystem(ss);
 		entityEngine.addSystem(ts);
-		entityEngine.addSystem(new BoundsRenderSystem(sRenderer));
-
+		entityEngine.addSystem(new BoundsRenderSystem(sRenderer));	
 		
+		for(int i = 0; i < 3; i++) {
+			entityEngine.addEntity(new Footman(MathUtils.random(64, 500), MathUtils.random(64,500),players[0]));
+		}
 	}
 	
-	public Gameplay(final AssetManager am, final ObjectInputStream stream) {
-		this(am);
-		
-		Object[] objects = null;
-		try {
-			objects = (Object[])stream.readObject();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		} finally {
-			// restore object states
-			
-		}
+	public Gameplay(final ObjectInputStream stream) {
+		this();
 	}
 	
 	@Override
 	public void show() {						
-		for(int i = 0; i < 4; i++) {
-			entityEngine.addEntity(new Footman(MathUtils.random(64, 500), MathUtils.random(64,500),am,players[0]));
-		}
+
 		
 		Gdx.input.setInputProcessor(this);
 	}
@@ -152,7 +136,6 @@ public class Gameplay implements Screen, InputProcessor {
 		// update & draw entites
 		entityEngine.update(delta);		
 		
-
 		// draw selection rectangle
 		sRenderer.begin(ShapeType.Line);
 		sRenderer.rect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height, Color.GREEN, Color.GREEN, Color.GREEN, Color.GREEN);
@@ -201,22 +184,18 @@ public class Gameplay implements Screen, InputProcessor {
 	public boolean keyUp(int keycode) {
 		switch(keycode){
 		case Keys.F5:
-			// TODO save game
-			
+			// TODO save game			
 			ObjectOutputStream o = null;
 			try {
 				o = new ObjectOutputStream(new FileOutputStream("C:/Users/Kamil/Desktop/out.txt", false));
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			try {
-				o.writeObject(((Footman)(entityEngine.getEntities().get(1))));
+				o.writeObject(((Footman)(entityEngine.getEntities().get(0))));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -233,7 +212,7 @@ public class Gameplay implements Screen, InputProcessor {
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {			
 		final Vector3 screenToWorld = cam.unproject(new Vector3(screenX, screenY, 0));	
-		final int selectedCount 	= ss.countSelected();
+		final int selectedCount 	= ss.getSelectedCount();
 		
 		switch(button){
 		case Buttons.LEFT:
@@ -244,16 +223,16 @@ public class Gameplay implements Screen, InputProcessor {
 				selectionRect.height 	= 0;		
 				ss.setProcessing(true);
 			} else {
-				ss.clearSelected();		
+				ss.resetSelectedCount();		
 			}
-			break;			
+			break;
+			
 		case Buttons.RIGHT:
 			targetPoint.x = screenToWorld.x;
 			targetPoint.y = screenToWorld.y;
 			
 			// after defining target coords, this must be called
 			ts.prepare(selectedCount);
-			
 			break;
 		}
 		return false;
@@ -268,7 +247,6 @@ public class Gameplay implements Screen, InputProcessor {
 			selectionRect.height 	= 0;
 			
 			ss.setProcessing(false);
-			ss.clearSelected();
 		}
 		return false;
 	}
