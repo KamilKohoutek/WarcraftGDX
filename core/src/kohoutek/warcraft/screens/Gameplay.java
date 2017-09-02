@@ -187,7 +187,7 @@ public class Gameplay implements Screen, InputProcessor {
 			// TODO save game			
 			ObjectOutputStream o = null;
 			try {
-				o = new ObjectOutputStream(new FileOutputStream("C:/Users/Kamil/Desktop/out.txt", false));
+				o = new ObjectOutputStream(new FileOutputStream("../core/saves/out.txt", false));
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
