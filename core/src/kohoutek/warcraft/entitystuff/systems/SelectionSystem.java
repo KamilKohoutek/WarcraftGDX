@@ -18,6 +18,7 @@ import kohoutek.warcraft.entitystuff.components.SelectedComponent;
  * @author Kamil Kohoutek
  */
 public class SelectionSystem extends IteratingSystem {
+	public static final int SELECTED_MAX = 1;
 	
 	/** reference to the selectionRect instance **/
 	private final SelectionRect selectionRect;
@@ -46,7 +47,7 @@ public class SelectionSystem extends IteratingSystem {
 		tmp.y += pos.y;				
 		
 		if(owner.id == 0 && selectionRect.overlaps(tmp)) {
-			 if(!isSelected(entity)){
+			 if(!isSelected(entity) && selectedCount < SELECTED_MAX){
 				 entity.add(new SelectedComponent());
 				 selectedCount++;
 			 }

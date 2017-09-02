@@ -34,6 +34,9 @@ import java.io.ObjectOutputStream;
 public class Footman extends Entity implements java.io.Serializable {
 	private static final long serialVersionUID = 6168245266013892556L;
 	
+	public static final int HP 			= 60;
+	public static final int SPEED		= 32;
+	
 	public static final int COST_GOLD 	= 0;
 	public static final int COST_LUMBER = 0;
 	public static final int COST_FOOD 	= 4;
@@ -59,8 +62,8 @@ public class Footman extends Entity implements java.io.Serializable {
 		add(pos);
 		add(new BoundsComponent(24,24,48,48));
 		add(new RenderableComponent());
-		add(new HealthComponent(60, 60));
-		add(new SpeedComponent(32));
+		add(new HealthComponent(HP, HP));
+		add(new SpeedComponent(SPEED));
 		add(new TargetPointComponent(initialTargetPoint));
 		add(new ScaleComponent(2, 2));
 		add(new StateComponent(EntityState.MOVING));
@@ -68,6 +71,58 @@ public class Footman extends Entity implements java.io.Serializable {
 		add(new OwnerComponent(owner.id));	
 		add(new Animation8xComponent(movement));
 	}
+	
+	private void writeObject(ObjectOutputStream stream) throws IOException { 
+		HealthComponent health = getComponent(HealthComponent.class);
+		PositionComponent pos = getComponent(PositionComponent.class);
+		TargetPointComponent target = getComponent(TargetPointComponent.class);
+		StateComponent state = getComponent(StateComponent.class);
+		OwnerComponent owner = getComponent(OwnerComponent.class);
+		stream.writeFloat(pos.x);
+		stream.writeFloat(pos.y);
+		stream.writeInt(health.hp);
+		stream.writeFloat(target.x);
+		stream.writeFloat(target.y);
+		stream.writeInt(owner.id);
+		stream.writeObject(state.state);
+
+	}
+			  
+	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {  
+		add(new PositionComponent(stream.readFloat(), stream.readFloat()));
+		add(new HealthComponent(HP, stream.readInt()));
+		add(new TargetPointComponent(stream.readFloat(), stream.readFloat()));
+		add(new OwnerComponent(stream.readInt()));
+		final EntityState state = (EntityState)stream.readObject();
+		add(new StateComponent(state));
+		
+		add(new SpeedComponent(SPEED));
+		add(new ScaleComponent(2, 2));	
+		add(new BoundsComponent(24,24,48,48));
+		add(new RenderableComponent());
+		
+		Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>();
+		Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>();
+		Animation<TextureRegion> death = deathAnim();
+		loadAnimArrays(movement, attack);
+		add(new StateAnimationsComponent(movement, attack, death));	
+				
+		switch(state){
+		case MOVING:
+			add(new Animation8xComponent(movement));
+			break;
+		case IDLE:
+			add(new Animation8xComponent(movement));
+			break;
+		case ATTACKING:
+			add(new Animation8xComponent(attack));
+			break;
+		case DYING:
+			add(new AnimationComponent(death));
+			break;
+		}		
+	}
+	
 	
 	/**
 	 * Initialize regions we need for animations
@@ -192,61 +247,11 @@ public class Footman extends Entity implements java.io.Serializable {
 			
 	}
 	
-	private void writeObject(ObjectOutputStream stream) throws IOException { 
-		HealthComponent health = getComponent(HealthComponent.class);
-		PositionComponent pos = getComponent(PositionComponent.class);
-		TargetPointComponent target = getComponent(TargetPointComponent.class);
-		StateComponent state = getComponent(StateComponent.class);
-		OwnerComponent owner = getComponent(OwnerComponent.class);
-		stream.writeFloat(pos.x);
-		stream.writeFloat(pos.y);
-		stream.writeInt(health.hp);
-		stream.writeInt(health.maxHP);
-		stream.writeFloat(target.x);
-		stream.writeFloat(target.y);
-		stream.writeInt(owner.id);
-		stream.writeObject(state.state);
-
-	}
-			  
-	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {  
-		add(new PositionComponent(stream.readFloat(), stream.readFloat()));
-		add(new HealthComponent(stream.readInt(), stream.readInt()));
-		add(new TargetPointComponent(stream.readFloat(), stream.readFloat()));
-		add(new OwnerComponent(stream.readInt()));
-		final EntityState state = (EntityState)stream.readObject();
-		add(new StateComponent(state));
-		
-		add(new SpeedComponent(32));
-		add(new ScaleComponent(2, 2));	
-		add(new BoundsComponent(24,24,48,48));
-		add(new RenderableComponent());
-		
-		Array<Animation<TextureRegion>> movement = new Array<Animation<TextureRegion>>(8);
-		Array<Animation<TextureRegion>> attack = new Array<Animation<TextureRegion>>(8);
-		Animation<TextureRegion> death = deathAnim();
-		loadAnimArrays(movement, attack);
-		
-		switch(state){
-		case MOVING:
-			add(new Animation8xComponent(movement));
-			break;
-		case IDLE:
-			add(new Animation8xComponent(movement));
-			break;
-		case ATTACKING:
-			add(new Animation8xComponent(attack));
-			break;
-		case DYING:
-			add(new AnimationComponent(death));
-			break;
-		}
-		
-		add(new StateAnimationsComponent(movement, attack, death));	
-	}
-	
 	
 	private static void loadAnimArrays(final Array<Animation<TextureRegion>> movement, final Array<Animation<TextureRegion>> attack){
+		movement.setSize(8);
+		attack.setSize(8);
+		
 		// walk anims
 		Animation<TextureRegion> anim = new Animation<TextureRegion>(0.25f,REGIONS[0]);
 		anim.setPlayMode(PlayMode.LOOP_PINGPONG);
@@ -316,6 +321,6 @@ public class Footman extends Entity implements java.io.Serializable {
 	}
 	
 	private static Animation<TextureRegion> deathAnim() {
-		return new Animation<TextureRegion>(0.25f, new TextureRegion[]{REGIONS[16][0],REGIONS[16][1],REGIONS[16][2],REGIONS[17][0],REGIONS[17][1],REGIONS[17][2]} );
+		return new Animation<TextureRegion>(0.25f, new TextureRegion[]{REGIONS[16][0],REGIONS[16][1],REGIONS[16][2],REGIONS[17][0],REGIONS[17][1],REGIONS[17][2]});
 	}
 }

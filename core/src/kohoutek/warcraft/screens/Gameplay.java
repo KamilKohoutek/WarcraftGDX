@@ -9,6 +9,8 @@ import java.io.ObjectOutputStream;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.EntitySystem;
+import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
@@ -45,20 +47,17 @@ import kohoutek.warcraft.entitystuff.systems.TargetSystem;
 
 public class Gameplay implements Screen, InputProcessor {
 	
-	// player contorl
 	private final SelectionRect			selectionRect;
 	private final Vector2				targetPoint;	
-
+	private final OrthographicCamera 	cam;
+	private final ShapeRenderer			sRenderer;
+	private final Engine 				entityEngine;
+	private final SelectionSystem		ss;
+	private final TargetSystem			ts;
+	private final Player[] 				players;
+	
 	private TiledMap 					map;
-	private OrthographicCamera 			cam;
 	private OrthogonalTiledMapRenderer 	mRenderer;
-	private ShapeRenderer				sRenderer;
-	private Engine 						entityEngine;
-	
-	private SelectionSystem				ss;
-	private TargetSystem				ts;
-	
-	private final Player[] players;
 
 	private Gameplay() {	
 		cam 			= new OrthographicCamera();
@@ -67,7 +66,8 @@ public class Gameplay implements Screen, InputProcessor {
 		players 		= new Player[]{new Player(Race.HUMAN, 0), new Player(Race.ORC, 1)};
 		selectionRect 	= new SelectionRect();
 		targetPoint 	= new Vector2();
-
+		ss 				= new SelectionSystem(selectionRect);
+		ts 				= new TargetSystem(targetPoint);
 	}
 
 	public Gameplay(final String mapName) {
@@ -75,10 +75,7 @@ public class Gameplay implements Screen, InputProcessor {
 				
 		map 			= new TmxMapLoader().load("../core/assets/" + mapName + ".tmx");
 		mRenderer 		= new OrthogonalTiledMapRenderer(map);
-		
-		ss 				= new SelectionSystem(selectionRect);
-		ts 				= new TargetSystem(targetPoint);		
-		
+			
 		entityEngine.addSystem(new AnimationRenderSystem(mRenderer.getBatch()));
 		entityEngine.addSystem(new MovementSystem());
 		entityEngine.addSystem(new AnimationOrientationSystem());
@@ -96,9 +93,7 @@ public class Gameplay implements Screen, InputProcessor {
 	}
 	
 	@Override
-	public void show() {						
-
-		
+	public void show() {		
 		Gdx.input.setInputProcessor(this);
 	}
 	
@@ -157,7 +152,7 @@ public class Gameplay implements Screen, InputProcessor {
 
 	@Override
 	public void resume() {
-	
+
 	}
 
 	@Override
@@ -170,10 +165,11 @@ public class Gameplay implements Screen, InputProcessor {
 		map.dispose();
 		mRenderer.dispose();
 		sRenderer.dispose();
+	
 	}
 	
 	
-	/*************** INPUT PROCESSING ***************/
+	/************************ INPUT PROCESSING *************************/
 	
 	@Override
 	public boolean keyDown(int keycode) {
